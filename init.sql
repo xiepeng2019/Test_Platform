@@ -1,0 +1,10 @@
+CREATE DATABASE IF NOT EXISTS crun CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE USER IF NOT EXISTS 'testrunneruser'@'%' IDENTIFIED BY 'testrunnerpass';
+
+GRANT SELECT, LOCK TABLES, SHOW VIEW, EVENT ON crun.* TO 'testrunneruser'@'%';
+
+GRANT RELOAD, PROCESS, REPLICATION CLIENT ON *.* TO 'testrunneruser'@'%';
+
+FLUSH PRIVILEGES;
+

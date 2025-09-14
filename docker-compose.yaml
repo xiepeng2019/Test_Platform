@@ -1,0 +1,124 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    container_name: test-runner-frontend
+    ports:
+      - "8080:80"
+    volumes:
+      - ./media:/media
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./crun
+      dockerfile: Dockerfile.dev  # 开发用带热重载的Dockerfile
+    container_name: test-runner-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./crun/app:/crun/app
+      - ./crun/alembic:/crun/alembic
+      - ./crun/alembic.ini:/crun/alembic.ini
+      - ./crun/pyproject.toml:/crun/pyproject.toml
+      - ./crun/uv.lock:/crun/uv.lock
+      - ./.env:/crun/.env
+      - ./media:/media
+    environment:
+      - FASTAPI_ENV=development
+      - MYSQL_USER=root
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    # DEBUG MODE
+    stdin_open: true # Keep stdin open for pdb
+    tty: true        # Allocate a pseudo-TTY
+
+
+  consul:
+    image: hashicorp/consul:1.18
+    container_name: consul
+    ports:
+      - "8500:8500"
+    command: agent -dev -client=0.0.0.0
+
+  mysql:
+    image: mysql:8
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    container_name: test-runner-mysql
+    ports:
+      - "3306:3306"
+    env_file:
+      - './.env'
+    volumes:
+      - test_runner_mysql_data:/var/lib/mysql
+      - ./backup:/backup
+
+  backup:
+    image: mysql:8
+    volumes:
+      - ./backup:/backup
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    depends_on:
+      - mysql
+    entrypoint: >
+      sh -c "while true; do
+        mysqldump -h mysql -u root -p${MYSQL_ROOT_PASSWORD} --all-databases > /backup/backup-$(date +%F_%T).sql;
+        find /backup -type f -name '*.sql' -mtime +14 -delete;
+        sleep 86400;
+      done"
+
+  # 时序数据库，数据采集存储
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+
+  # 看板工具
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    ports:
+      - 3001:3000
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    env_file:
+      - ./grafana/config.monitoring
+
+  # 采集工具
+  mysql-exporter:
+    image: prom/mysqld-exporter
+    container_name: mysql-exporter
+    restart: unless-stopped
+    ports:
+      - 9104:9104
+    command:
+      - "--mysqld.username=root:${MYSQL_ROOT_PASSWORD}"
+      - "--mysqld.address=mysql:3306"
+    depends_on:
+      - mysql
+
+
+volumes:
+  test_runner_mysql_data:
+  media_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./media

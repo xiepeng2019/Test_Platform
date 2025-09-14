@@ -1,0 +1,37 @@
+const i18n = {
+  'en-US': {
+  },
+  'zh-CN': {
+    'task.form.edit': '编辑任务',
+    'task.form.create': '新建任务',
+    'task.form.detail': '任务详情',
+    'task.columns.project': '项目',
+    'task.columns.id': 'ID',
+    'task.columns.name': '任务名称',
+    'task.columns.owner': '负责人',
+    'task.columns.config': '任务配置',
+    'task.columns.status': '任务状态',
+    'task.columns.failed_continue': '失败继续',
+    'task.columns.lark_notice': '飞书通知',
+    'task.columns.server_id': '服务器配置',
+    'task.columns.server': '服务器',
+    'task.columns.lark_subscribe': '飞书订阅',
+    'task.columns.config_id': '任务配置',
+    'task.columns.lark_notice.tooltip': '开启后，测试失败时会通知飞书订阅的用户',
+    'task.columns.case_index': '测试用例',
+    'form.search': '搜索',
+    'form.reset': '重置',
+    'columns.createdTime': '创建时间',
+    'columns.updatedTime': '更新时间',
+    'columns.operations': '操作',
+    'columns.operations.run': '运行',
+    'columns.operations.view': '详情',
+    'columns.operations.log': '日志',
+    'columns.operations.edit': '编辑',
+    'columns.operations.delete': '删除',
+    'columns.operations.detail': '详情',
+    'operations.create': '新建',
+  },
+};
+
+export default i18n;

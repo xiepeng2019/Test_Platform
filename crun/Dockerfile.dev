@@ -1,0 +1,12 @@
+FROM python:3.12
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# 先安装依赖，避免每次都重新安装
+WORKDIR /crun
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-cache
+
+EXPOSE 8000
+ENV PYTHONPATH=/crun
+CMD ["/crun/.venv/bin/fastapi", "run", "app/app.py", "--port", "8000", "--host", "0.0.0.0", "--reload"]

@@ -1,0 +1,27 @@
+[project]
+name = "crun"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "aiohttp",
+    "alembic",
+    "asyncmy",
+    "python-consul",
+    "cryptography",
+    "fastapi-users[sqlalchemy]",
+    "fastapi[all]==0.115.13",
+    "gunicorn",
+    "httpx",
+    "loguru==0.7.2",
+    "openpyxl",
+    "pandas",
+    "pydantic-settings==2.10.0",
+    "pytest",
+    "pytest-asyncio",
+    "sqlalchemy==2.0.31",
+    "fastcrud>=0.15.12",
+    "requests>=2.32.4",
+    "prometheus-fastapi-instrumentator>=7.1.0",
+]
