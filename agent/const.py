@@ -11,7 +11,7 @@ TASK_SETTINGS_MAP: Dict[str, Dict[str, Any]] = {}
 CONTAINER_STOP_HOOKS: List[Callable[[str, Dict[str, Any]], Union[None, Coroutine[Any, Any, None]]]] = []
 LOG_HOST_DIR = Path(__file__).parent / 'log' / 'test_logs'
 LOG_HOST_DIR.mkdir(parents=True, exist_ok=True)
-PIP_PROXY = "https://bytedpypi.byted.org/simple"
+# PIP_PROXY = "https://bytedpypi.byted.org/simple"
 PIP_CACHE_DIR = '/root/.cache/pip'
 
 if not SERVER_IP:

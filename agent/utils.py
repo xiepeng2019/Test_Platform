@@ -2,10 +2,9 @@ import asyncio
 from typing import Dict, Any
 import os
 import socket
-import traceback
 import aiohttp
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Callable, Union, Coroutine, Any
 
@@ -20,7 +19,6 @@ from const import (
     GITLAB_ACCESS_TOKEN,
     LOG_HOST_DIR,
     PIP_CACHE_DIR,
-    PIP_PROXY,
     SERVER_IP,
     TASK_SETTINGS_MAP,
 )
@@ -122,8 +120,9 @@ class DockerContainerHandler:
             echo '🐳 Git clone test repo' && \
             git clone --depth=1 -b {task_info['branch']} {self.git_repo} /app && \
             echo '🐳 Install requirements' && \
-            pip install -r /app/requirements.txt -i {PIP_PROXY} --cache-dir={PIP_CACHE_DIR} && \
+            pip install -r /app/requirements.txt && \
             pip install requests && \
+            pip install loguru && \
             echo '🐳 Run pytest' && \
             echo '🐳 Case indices: {self.cases_index}' && \
             echo '🐳 Env vars: {self.env_vars}' && \
@@ -273,6 +272,32 @@ async def trigger_container_stop_hooks(job_id: str, task_info: Dict[str, Any]):
                 hook(job_id, task_info)
         except Exception as e:
             logger.error(f"Error in container stop hook: {e}")
+
+async def clean_expired_containers():
+    """清理：创建时间超过24小时且状态为退出（exited）的容器"""
+    logger.info("开始执行过期容器清理任务")
+    # 1. 定义时间阈值（当前时间 - 24小时）
+    one_day_ago = datetime.now() - timedelta(days=1)
+    # 2. 遍历所有容器（包括停止的）
+    try:
+        containers = client.containers.list(all=True)  # all=True 显示所有容器（包括已停止）
+        for container in containers:
+            # 3. 解析容器创建时间（Docker 时间格式：2024-05-20T12:34:56.789012345Z）
+            create_time_str = container.attrs["Created"].split(".")[0]  # 截取到秒级
+            create_time = datetime.strptime(create_time_str, "%Y-%m-%dT%H:%M:%S")
+            # 4. 筛选条件：创建时间超过24小时 + 状态为 exited
+            if create_time < one_day_ago and container.status == "exited":
+                logger.info(f"清理过期容器：{container.name}（ID: {container.id[:12]}），创建时间：{create_time}")
+                # 5. 停止容器（若未完全停止）并删除
+                try:
+                    await asyncio.to_thread(container.stop)  # 确保容器停止
+                    await asyncio.to_thread(container.remove)  # 删除容器
+                    logger.success(f"容器 {container.name} 清理完成")
+                except docker.errors.APIError as e:
+                    logger.error(f"清理容器 {container.name} 失败：{str(e)}")
+    except Exception as e:
+        logger.error(f"容器清理任务执行失败：{str(e)}")
+    logger.info("过期容器清理任务执行完毕")
 
 
 # 注册默认hook
