@@ -1,10 +1,8 @@
 from typing import Any
-
 from sqlalchemy import UniqueConstraint, Integer, String, DateTime, JSON, Boolean, Text
 from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import mapped_column, relationship
 from sqlalchemy.sql import func
-
 from app.core.orm import Base
 
 
@@ -40,4 +38,12 @@ class TestCase(Base):
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now(), doc="测试用例创建时间")
     updated_at: Mapped[DateTime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now(), doc="测试用例最后更新时间"
+    )
+    bugs = relationship(
+        "Bug", # 关联的目标模型
+        secondary="bug_testcase_association", # 指定中间表的表名，用于维护多对多关系
+        primaryjoin="TestCase.id == foreign(BugCases.testcase_id)", # 指定TestCase表与中间表的关联关系
+        secondaryjoin="Bug.id == foreign(BugCases.bug_id)", # 指定Bug表与中间表的关联关系
+        back_populates="testcases", # 双向关系 互相引用
+        lazy="selectin"  # 一次性查询所有数据
     )

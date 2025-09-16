@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from app.config.config import get_settings
+from app.config.config import (get_settings)
 from app.core.middleware.tenant import TenantMiddleware
 from app.api.v1.routes import (
     user,
@@ -16,15 +16,15 @@ from app.api.v1.routes import (
 from app.api.v1.routes.task import case_record, task_record, task, task_config
 from app.api.v1.routes.case import cases, case_node
 from app.api.v1.routes.resource import server
-from app.api.v1.routes.bug import bug
+from app.api.v1.routes.bug.bug import bug_router
+from app.api.v1.routes.report.report import report_router
 from app.core.database import create_db_and_tables
 
 settings = get_settings()
 
 origins = [
     settings.FRONTEND_URL,
-    settings.STATIC_URL,
-    'http://127.0.0.1:8080',
+    settings.STATIC_URL
 ]
 
 
@@ -48,7 +48,8 @@ def create_app() -> FastAPI:
     app.include_router(case_record.router, tags=["case-record"])
     app.include_router(server.router, tags=["resource"])
     app.include_router(mock.router, tags=["mock"])
-    app.include_router(bug.router, tags=["bug"])
+    app.include_router(bug_router, tags=["bug"])
+    app.include_router(report_router, tags=["report"])
     app.add_middleware(TenantMiddleware)
     app.add_middleware(
         CORSMiddleware,
