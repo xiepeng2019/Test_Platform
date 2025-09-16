@@ -23,7 +23,8 @@ ModelType = TypeVar("ModelType", bound=Base)  # 哪一个表模型
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)  # 创建的 schemas 是哪个 
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)  # 更新的 schemas 是哪个
 
-
+# Generic 用于创建泛型类（Generic Classes）。泛型允许类、函数或方法在定义时不指定具体类型，而是在使用时动态指定，从而实现代码的复用和类型安全。
+# 将类型本身作为 “参数” 传递给类或函数。
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(self, model: Type[ModelType]):
         self.model = model

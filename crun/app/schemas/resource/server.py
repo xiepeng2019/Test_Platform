@@ -1,10 +1,8 @@
 from enum import Enum
 from typing import List, Optional
 from datetime import datetime
-
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field
 from pydantic import BaseModel
-
 from app.schemas.user import UserSearch
 
 

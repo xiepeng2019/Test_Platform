@@ -41,7 +41,7 @@ engine = create_async_engine(
     pool_recycle=60 * 20,  # 20 minutes, 设置时间以限制数据库自动断开
     pool_timeout=30.0,  # 如果超过这个时间, 还没有获得将会抛出异常
 )
-
+# async_sessionmaker：用于创建异步数据库绘画的工具，避免重复配置会话参数，确保每次获取的会话都是独立的
 async_session: async_sessionmaker[AsyncSession] = async_sessionmaker(
     bind=engine,
     expire_on_commit=False,

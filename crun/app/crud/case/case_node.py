@@ -14,7 +14,8 @@ from app.models import TestCase, TestCaseNode, TestTask
 from app.schemas import TestCaseCreate, TestCaseUpdate
 from app.schemas import TestCaseNodeTreeItem, TestCaseNodeTreeItemOfTask
 
-
+# 用于将协议类（Protocol） 标记为 “运行时可检查的”。它的核心作用是让协议类能够在运行时通过 isinstance()
+# 或 issubclass() 函数进行类型检查，这在常规的协议类中是不支持的
 @runtime_checkable
 class IntConvertible(Protocol):
     def __str__(self) -> str: ...

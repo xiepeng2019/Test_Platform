@@ -29,7 +29,7 @@ class Settings(LarkSettings, MysqlSettings):
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-
+# 用于缓存函数返回结果的装饰器，使用其他的函数调用该函数的返回，提升性能
 @cache
 def get_settings() -> Settings:
     """lru_cache 保证了只有在第一次调用它时才会创建 Settings 对象一次
