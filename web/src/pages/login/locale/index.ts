@@ -25,7 +25,7 @@ const i18n = {
     'login.form.login': '登录',
     'login.form.lark-login': '飞书授权登录',
     'login.form.register': '注册账号',
-    'login.banner.subSlogan1': '全生命周期跟踪，助力高效完成芯片产前验证。',
+    'login.banner.subSlogan1': '全生命周期跟踪，助力高效完成产前验证。',
     'login.banner.slogan2': '内置了常见问题的解决方案',
     'login.banner.subSlogan2': '国际化，路由配置，状态管理应有尽有',
     'login.banner.slogan3': '接入可视化增强工具AUX',

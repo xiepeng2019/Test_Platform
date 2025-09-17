@@ -14,7 +14,7 @@ CONFIG = os.environ.get("WALLY_CONFIG", "{}")
 
 
 def _send_test_result(item, report, start_time):
-    """Test result callback"""
+    """测试结果回调"""
     try:
         end_time = time.time()
         duration = end_time - start_time if start_time else report.duration
@@ -58,7 +58,7 @@ def pytest_configure(config):
 
 @pytest.hookimpl(hookwrapper=True, trylast=True)
 def pytest_runtest_makereport(item, call):
-    """ runtest hoook"""
+    """ runtest hook"""
     if item.nodeid not in case_start_time:
         case_start_time[item.nodeid] = time.time()
 

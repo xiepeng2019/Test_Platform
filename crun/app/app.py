@@ -27,7 +27,8 @@ origins = [
     settings.STATIC_URL
 ]
 
-
+# 异步生命周期上下文管理器
+# 用于管理 FastAPI 应用的启动和关闭过程，主要作用是在应用启动时执行初始化操作（如创建数据库表）。
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await create_db_and_tables()
@@ -36,6 +37,7 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(lifespan=lifespan)
+    # include_router用于路由模块化管理的核心方法，它允许将分散在不同文件中的子路由（APIRouter实例）整合到主应用或父路由中，实现代码的拆分与组织。
     app.include_router(user.router)
     app.include_router(auth.router, tags=["auth"])
     app.include_router(project.router, tags=["projects"])
