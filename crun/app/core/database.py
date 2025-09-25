@@ -48,6 +48,7 @@ async_session: async_sessionmaker[AsyncSession] = async_sessionmaker(
 )
 
 async def create_db_and_tables():
+    # 创建数据库和表
     for i in range(10):
         try:
             async with engine.begin() as conn:

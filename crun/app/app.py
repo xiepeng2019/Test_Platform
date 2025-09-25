@@ -4,21 +4,21 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from crun.app.config.config import (get_settings)
-from crun.app.core.middleware.tenant import TenantMiddleware
-from crun.app.api.v1.routes import (
+from app.config.config import (get_settings)
+from app.core.middleware.tenant import TenantMiddleware
+from app.api.v1.routes import (
     user,
     project,
     auth,
     mock,
     test_plan,
 )
-from crun.app.api.v1.routes.task import case_record, task_record, task, task_config
-from crun.app.api.v1.routes.case import cases, case_node
-from crun.app.api.v1.routes.resource import server
-from crun.app.api.v1.routes.bug.bug import bug_router
-from crun.app.api.v1.routes.report.report import report_router
-from crun.app.core.database import create_db_and_tables
+from app.api.v1.routes.task import case_record, task_record, task, task_config
+from app.api.v1.routes.case import cases, case_node
+from app.api.v1.routes.resource import server
+from app.api.v1.routes.bug.bug import bug_router
+from app.api.v1.routes.report.report import report_router
+from app.core.database import create_db_and_tables
 
 settings = get_settings()
 
