@@ -74,3 +74,5 @@ class BugQueryParams(BaseModel):
 class BugDelete(BaseModel):
     id: int
     message: str
+
+
