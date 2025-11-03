@@ -11,7 +11,12 @@ from app.schemas import TestCaseCreate, TestCaseUpdate
 
 
 class CRUDTestCase(CRUDBase[TestCase, TestCaseCreate, TestCaseUpdate]):
+    """
+    TestCase的CRUD操作
+    """
+
     async def get_by_index(self, db: AsyncSession, *, project_id: int, index: str) -> Optional[TestCase]:
+        """根据项目ID和用例索引获取测试用例"""  
         result = await db.execute(select(TestCase).filter(
             TestCase.project_id == project_id,
             TestCase.index == index
@@ -19,7 +24,7 @@ class CRUDTestCase(CRUDBase[TestCase, TestCaseCreate, TestCaseUpdate]):
         return result.scalars().first()
 
     async def get_all_child_nodes(self, db: AsyncSession, node_id: int) -> List[int]:
-        """Recursively get all child node ids."""
+        """递归获取所有子节点ID"""
         query = select(TestCaseNode.id).where(TestCaseNode.parent_id == node_id)
         result = await db.execute(query)
         direct_child_ids = result.scalars().all()
@@ -33,6 +38,7 @@ class CRUDTestCase(CRUDBase[TestCase, TestCaseCreate, TestCaseUpdate]):
     async def get_multi(
         self, db: AsyncSession, *, skip: int = 0, limit: int = 100, **kwargs
     ) -> Sequence[TestCase]:
+        """根据节点ID递归获取所有子节点的测试用例"""
         query = select(self.model)
         node_id = kwargs.pop('node_id', None)
 
@@ -49,6 +55,7 @@ class CRUDTestCase(CRUDBase[TestCase, TestCaseCreate, TestCaseUpdate]):
         return result.scalars().all()
 
     async def count(self, db: AsyncSession, **kwargs) -> int:
+        """根据节点ID递归统计所有子节点的测试用例数量"""
         query = select(func.count()).select_from(self.model)
         node_id = kwargs.pop('node_id', None)
 
@@ -65,20 +72,24 @@ class CRUDTestCase(CRUDBase[TestCase, TestCaseCreate, TestCaseUpdate]):
         return result.scalar_one()
 
     async def get_by_name(self, db: AsyncSession, *, name: str) -> Optional[TestCase]:
+        """根据用例名称获取测试用例"""
         result = await db.execute(select(TestCase).filter(TestCase.name == name))
         return result.scalars().first()
 
     async def get_by_id(self, db: AsyncSession, *, id: int) -> Optional[TestCase]:
+        """根据ID获取测试用例"""
         result = await db.execute(select(TestCase).filter(TestCase.id == id))
         return result.scalars().first()
 
     async def get_by_node_id(self, db: AsyncSession, *, node_id: int) -> Sequence[TestCase]:
+        """根据节点ID获取测试用例"""
         result = await db.execute(select(TestCase).filter(TestCase.node_id == node_id))
         return result.scalars().all()
 
     async def create_or_update_cases(self, db: AsyncSession, cases: list[TestCaseCreate]) -> None:
-        case_dicts = [case.model_dump() for case in cases]
-        stmt = mysql_insert(TestCase).values(case_dicts)
+        """创建或更新测试用例"""
+        case_dicts = [case.model_dump() for case in cases] # model_dump将模型实例转换为字典
+        stmt = mysql_insert(TestCase).values(case_dicts) # 构建插入语句
 
         # 构建 update 字段（排除主键 id，不更新）
         update_dict = {

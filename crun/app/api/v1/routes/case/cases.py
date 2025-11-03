@@ -42,9 +42,7 @@ async def list_data(
     module: Optional[str] = None,
     node_id: Optional[int] = None,
 ) -> Any:
-    f"""
-    Retrieve {source}.
-    """
+    """获取用例列表"""
     skip = (page - 1) * pageSize
     query_params = {
         "project_id": project_id,
@@ -76,9 +74,7 @@ async def create(
     project_id: int = Depends(deps.current_project_id),
     case_in: TestCaseCreate,
 ) -> Any:
-    f"""
-    Create new {source}.
-    """
+    """创建用例"""
     logger.debug(f"Create {source} with project_id: {project_id}")
     data = await crud.create(db=db, project_id=project_id, obj_in=TestCaseCreate(**case_in.model_dump()))
     return data
@@ -91,9 +87,7 @@ async def update(
     id: int,
     data_in: TestCaseUpdate,
 ) -> Any:
-    f"""
-    Update an {source}.
-    """
+    """更新用例"""
     data = await crud.get(db=db, id=id)
     if not data:
         raise HTTPException(status_code=404, detail=f"{source} not found")
@@ -108,9 +102,7 @@ async def read(
     project_id: int = Depends(deps.current_project_id),
     id: Union[int, str],
 ) -> Any:
-    f"""
-    Get {source} by ID.
-    """
+    """获取用例"""
     if isinstance(id, str):
         data = await crud.get_by_index(db=db, project_id=project_id, index=id)
     else:
@@ -126,9 +118,7 @@ async def delete(
     db: AsyncSession = Depends(deps.get_db),
     id: int,
 ) -> Any:
-    f"""
-    Delete an {source}.
-    """
+    """删除用例"""
     data = await crud.get(db=db, id=id)
     if not data:
         raise HTTPException(status_code=404, detail=f"{source} not found")
@@ -139,6 +129,12 @@ async def delete(
 REQUIRED_COLUMNS = {'测试点编号', '测试点名称', '测试目的', '优先级', '预置条件', '测试步骤', '预期结果', '预期结果'}
 
 def filter_valid_sheets(excel_file: pd.ExcelFile) -> tuple[list[str], list[TestCaseFileValidateError]]:
+    """
+    筛选出 Excel 文件中符合要求的 sheet 名称。
+
+    :param excel_file: 上传的 Excel 文件对象
+    :return: 包含有效 sheet 名称的列表和校验错误的列表
+    """
     errors = []
     valid_sheets = []
 
@@ -170,10 +166,7 @@ def filter_valid_sheets(excel_file: pd.ExcelFile) -> tuple[list[str], list[TestC
     return valid_sheets, errors
 
 
-@router.post(
-    "/validate",
-    operation_id="validateTestCaseFile",
-    response_model=ValidateSuccessResponse,
+@router.post("/validate", operation_id="validateTestCaseFile", response_model=ValidateSuccessResponse,
     responses={
         HTTP_400_BAD_REQUEST: {
             "model": BatchTestCaseFileValidateError,
@@ -186,6 +179,7 @@ def filter_valid_sheets(excel_file: pd.ExcelFile) -> tuple[list[str], list[TestC
     },
 )
 async def validate(file: UploadFile = File(...)) -> ValidateSuccessResponse:
+    """校验用例文件"""
     try:
         contents = await file.read()
         excel_file = pd.ExcelFile(BytesIO(contents))
@@ -225,10 +219,16 @@ def clean_index(index: str) -> str:
 
 
 def is_code_segment(seg: str) -> bool:
+    """
+    判断字符串是否为代码片段，例如 A123, B45, 1234
+    """
     return bool(re.fullmatch(r"[A-Z]{1,3}\d{2,4}", seg)) or bool(re.fullmatch(r"\d{2,4}", seg))
 
 
 def strip_code_suffix(index: str) -> List[str]:
+    """
+    从字符串中移除代码片段后缀，例如 A123, B45, 1234 等
+    """
     index = clean_index(index)  # 清洗字符串
     parts = index.split("-")
     while parts and is_code_segment(parts[-1]):
@@ -243,9 +243,7 @@ async def import_cases(
     project_id: int = Depends(deps.current_project_id),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
-    f"""
-    Import test cases from file.
-    """
+    """导入用例"""
     def get_str_field(val: Any, default: str = "") -> str:
         return val if isinstance(val, str) and not pd.isna(val) else default
 

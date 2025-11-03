@@ -27,7 +27,8 @@ router.include_router(
 )
 
 @router.get("/api/users/me", response_model=UserRead, operation_id='getUserInfo')
-async def users_me(user: User = Depends(fastapi_users.current_user(active=True))):
+async def users_me(user: User = Depends(fastapi_users.current_user(active=True))) -> UserRead:
+    """获取当前用户信息"""
     # 1. 初始化一个空的权限列表
     permission_list = []
 
@@ -53,21 +54,23 @@ async def users_search(
     q: str = '',
     user_manager: BaseUserManager[User, uuid.UUID] = Depends(get_user_manager)
 ):
+    """搜索用户"""
     return await user_manager.user_db.search(q)
 
 
 @router.post("/api/users/me/avatar", response_model=UpdateUserAvatar, tags=["users"], operation_id='uploadAvatar')
 async def upload_avatar(
-    file: UploadFile = File(...),
-    user: User = Depends(fastapi_users.current_user(active=True)),
-    user_manager: BaseUserManager[User, uuid.UUID] = Depends(get_user_manager)
+    file: UploadFile = File(...), # 上传的文件
+    user: User = Depends(fastapi_users.current_user(active=True)), # 当前登录用户
+    user_manager: BaseUserManager[User, uuid.UUID] = Depends(get_user_manager) # 用户管理类
 ):
-    media_path = Path("/media/avatars")
-    media_path.mkdir(parents=True, exist_ok=True)
+    """上传用户头像"""
+    media_path = Path("/media/avatars") # 头像存储路径
+    media_path.mkdir(parents=True, exist_ok=True) # 创建头像存储目录
 
-    file_extension = Path(file.filename).suffix
-    file_name = f"{uuid.uuid4()}{file_extension}"
-    file_path = media_path / file_name
+    file_extension = Path(file.filename).suffix # 获取文件扩展名
+    file_name = f"{uuid.uuid4()}{file_extension}" # 生成唯一文件名
+    file_path = media_path / file_name # 构造文件路径
 
     with file_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)

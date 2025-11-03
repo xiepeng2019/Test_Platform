@@ -1,7 +1,8 @@
 from pydantic_settings import BaseSettings
 
 
-class Settings(BaseSettings):
+class MysqlSettings(BaseSettings):
+    """MySQL配置类"""
     MYSQL_ROOT_PASSWORD: str
     MYSQL_DATABASE: str
     MYSQL_HOST: str

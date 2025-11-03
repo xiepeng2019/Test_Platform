@@ -62,3 +62,4 @@ async def delete_bug(id: int, db: AsyncSession = Depends(deps.get_db)) -> Any:
         raise HTTPException(status_code=404, detail="Bug not found")
     await crud.remove(db=db, id=id)
     return BugDelete(id=id, message="Delete Success")
+

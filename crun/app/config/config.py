@@ -12,6 +12,7 @@ _WORK_DIR = get_work_dir()
 
 
 class Settings(LarkSettings, MysqlSettings):
+    """应用配置类"""
     SECRET_KEY: str
     NAME: str
     FRONTEND_URL: str

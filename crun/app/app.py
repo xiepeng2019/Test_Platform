@@ -31,12 +31,14 @@ origins = [
 # 用于管理 FastAPI 应用的启动和关闭过程，主要作用是在应用启动时执行初始化操作（如创建数据库表）。
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """FastAPI 应用生命周期管理"""
     await create_db_and_tables()
     yield
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(lifespan=lifespan)
+    """创建 FastAPI 应用实例"""
+    app = FastAPI(lifespan=lifespan) 
     # include_router用于路由模块化管理的核心方法，它允许将分散在不同文件中的子路由（APIRouter实例）整合到主应用或父路由中，实现代码的拆分与组织。
     app.include_router(user.router)
     app.include_router(auth.router, tags=["auth"])
@@ -52,16 +54,16 @@ def create_app() -> FastAPI:
     app.include_router(mock.router, tags=["mock"])
     app.include_router(bug_router, tags=["bug"])
     app.include_router(report_router, tags=["report"])
-    app.add_middleware(TenantMiddleware)
+    app.add_middleware(TenantMiddleware) # 租户中间件，用于在请求中添加租户信息
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-        expose_headers=["Content-Disposition"],
+        allow_origins=origins, # 允许的来源，这里设置为所有来源
+        allow_credentials=True, # 允许携带认证信息（如 Cookies、HTTP 认证）
+        allow_methods=["*"], # 允许的 HTTP 方法，这里设置为所有方法
+        allow_headers=["*"], # 允许的 HTTP 头，这里设置为所有头
+        expose_headers=["Content-Disposition"], # 暴露的 HTTP 头，这里设置为 Content-Disposition
     )
-    Instrumentator().instrument(app).expose(app)
+    Instrumentator().instrument(app).expose(app) # 给普罗米修斯做采集使用
     return app
 
 

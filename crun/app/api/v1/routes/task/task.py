@@ -20,7 +20,6 @@ from app.services import TaskRecordService, get_task_record_service
 
 
 router = APIRouter(prefix="/api/test_task")
-# task_queues: dict[str, asyncio.Queue] = {}
 
 
 @router.get("", response_model=TaskSchemas.TestTaskList, operation_id='listTestTask')
@@ -32,7 +31,7 @@ async def list(
     query: TaskSchemas.TestTaskQueryParams = Depends(),
     service: TaskService = Depends(get_task_service),
 ) -> Any:
-    """ Retrieve data. """
+    """获取任务列表"""
     skip = (page - 1) * pageSize
     query_params = query.model_dump(exclude_unset=True)
     query_params["project_id"] = project_id
@@ -55,7 +54,7 @@ async def create(
     user: UserModels.User = Depends(deps.fastapi_users.current_user(active=True)),
     project_id: int = Depends(deps.current_project_id),
 ) -> Any:
-    """Create new data """
+    """创建新任务"""
     return await service.create(
         db=db,
         data_in=data_in,
@@ -74,7 +73,7 @@ async def update(
     project_id: int = Depends(deps.current_project_id),
     user: UserModels.User = Depends(deps.fastapi_users.current_user(active=True)),
 ) -> Any:
-    """ Update by ID. """
+    """更新任务"""
     return await service.update(db, project_id, user, id, data_in)
 
 
@@ -84,7 +83,7 @@ async def get(
     task: TestTask = Depends(deps.get_task_by_id),
     service: TaskService = Depends(get_task_service),
 ) -> Any:
-    """ Get by ID. """
+    """获取任务"""
     return await service.get(task)
 
 
@@ -95,16 +94,12 @@ async def delete(
     task: TestTask = Depends(deps.get_task_by_id),
     service: TaskService = Depends(get_task_service),
 ) -> Any:
-    """ Delete data by ID. """
+    """删除任务"""
     delete_obj = await service.delete(db, task)
     return TaskSchemas.TestTask.model_validate(delete_obj)
 
 
-@router.post(
-    "/{id}/run",
-    response_model=TaskRecordSchemas.TaskRunOut,
-    operation_id='runTestTask'
-)
+@router.post("/{id}/run", response_model=TaskRecordSchemas.TaskRunOut, operation_id='runTestTask')
 async def run(
     *,
     db: AsyncSession = Depends(deps.get_db),
@@ -112,7 +107,7 @@ async def run(
     service: TaskService = Depends(get_task_service),
     project_id: int = Depends(deps.current_project_id),
 ) -> Any:
-    """ Run task data by ID. """
+    """运行任务"""
     project = await crud_project.get(db=db, id=project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -123,18 +118,13 @@ async def run(
         db=db,
     )
 
-@router.get(
-    "/{id}/tree",
-    response_model=List[CaseNodeSchemas.TestCaseNodeTreeItemOfTask],
-    operation_id='getTestTaskTree'
-)
+@router.get("/{id}/tree", response_model=List[CaseNodeSchemas.TestCaseNodeTreeItemOfTask], operation_id='getTestTaskTree')
 async def tree(
-    *,
-    db: AsyncSession = Depends(deps.get_db),
-    task: TestTask = Depends(deps.get_task_by_id),
-    project_id: int = Depends(deps.current_project_id),
+    *, 
+    db: AsyncSession = Depends(deps.get_db), 
+    task: TestTask = Depends(deps.get_task_by_id), project_id: int = Depends(deps.current_project_id),
 ) -> Any:
-    """ Run record data by ID. """
+    """获取任务树"""
     return await crud_case_node.get_tree_with_task_selected(
         db=db,
         project_id=project_id,
@@ -144,33 +134,33 @@ async def tree(
 
 @router.get("/{id}/log/stream", operation_id='getTestTaskLogSSE')
 async def logs_sse(
-    request: Request,
-    db: AsyncSession = Depends(deps.get_db),
-    task: TestTask = Depends(deps.get_task_by_id),
-    task_service: TaskService = Depends(get_task_service),
-    record_service: TaskRecordService = Depends(get_task_record_service),
+    request: Request,  # FastAPI 封装的请求对象，用于检测客户端连接状态
+    db: AsyncSession = Depends(deps.get_db),  # 异步数据库会话，通过依赖注入获取
+    task: TestTask = Depends(deps.get_task_by_id),  # 测试任务对象，通过路径参数`id`查询得到
+    task_service: TaskService = Depends(get_task_service),  # 任务相关的业务逻辑服务
+    record_service: TaskRecordService = Depends(get_task_record_service),  # 任务记录相关的业务逻辑服务
 ):
-    """ Get task logs"""
-    task_record = await record_service.get_task_record(db, task_id=task.id)
-    queue = asyncio.Queue()
+    """获取任务日志流"""
+    task_record = await record_service.get_task_record(db, task_id=task.id) # 查询任务记录，根据任务ID获取任务记录对象。
+    queue = asyncio.Queue() # 创建一个异步队列，用于在任务记录ID和代理客户端之间传递日志消息。
     # task_queues[str(task_record.id)] = queue
 
-    asyncio.create_task(agent_client.start_ws_to_agent(str(task_record.id), queue))
+    asyncio.create_task(agent_client.start_ws_to_agent(str(task_record.id), queue)) # 启动一个异步任务，将任务记录ID和队列传递给代理客户端，开始从代理接收日志消息。
     return StreamingResponse(
-        task_service.log_stream(request, queue), media_type="text/event-stream"
+        task_service.log_stream(request, queue), media_type="text/event-stream"   # SSE 协议的 MIME 类型，告诉客户端这是一个持续的事件流，需要保持连接并持续接收数据。
     )
 
 
 @router.get("/{id}/records", response_model=TaskRecordSchemas.TaskRecordList, operation_id='listTestTaskRecord')
 async def records(
     *,
-    task: TestTask = Depends(deps.get_task_by_id),
-    db: AsyncSession = Depends(deps.get_db),
-    record_service: TaskRecordService = Depends(get_task_record_service),
+    task: TestTask = Depends(deps.get_task_by_id), # 测试任务对象，通过路径参数`id`查询得到
+    db: AsyncSession = Depends(deps.get_db), # 异步数据库会话，通过依赖注入获取
+    record_service: TaskRecordService = Depends(get_task_record_service), # 任务记录相关的业务逻辑服务
 ) -> Any:
-    """ Get by ID. """
+    """获取任务记录列表"""
     await asyncio.sleep(1)
-    datas, total = await record_service.list(db, task_id=task.id)
+    datas, total = await record_service.list(db, task_id=task.id) # 查询任务记录，根据任务ID获取任务记录列表。
     return TaskRecordSchemas.TaskRecordList(
         list=datas,
         total=total,

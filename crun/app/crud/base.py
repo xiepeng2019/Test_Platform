@@ -49,6 +49,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return query
 
     async def get_options(self, db: AsyncSession, project_id: int | None = None) -> Sequence[RowMapping]:
+        """ 获取数据库对象选项"""
         if hasattr(self.model, 'name') and hasattr(self.model, 'id'):
             query = select(self.model.name, self.model.id)
             if project_id:
@@ -69,6 +70,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def get_multi(
         self, db: AsyncSession, *, skip: int = 0, limit: int = 100, **kwargs
     ) -> Sequence[ModelType]:
+        """ 获取数据库对象列表"""
         query = select(self.model)
         project_id = kwargs.get('project_id')
         if project_id:
@@ -79,6 +81,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return result.scalars().all()
 
     async def count(self, db: AsyncSession, **kwargs) -> int:
+        """ 统计数据库对象数量"""
         query = select(func.count()).select_from(self.model)
         project_id = kwargs.get('project_id')
         if project_id:
@@ -89,6 +92,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return result.scalar_one()
 
     async def create(self, db: AsyncSession, *, project_id: int, obj_in: CreateSchemaType | dict) -> ModelType:
+        """ 创建数据库对象"""
         obj_in_data = obj_in if isinstance(obj_in, dict) else obj_in.model_dump()
         logger.debug(f"Create {self.model.__name__} with data: {obj_in_data}")
         db_obj = self.model(**{
@@ -100,9 +104,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         await db.refresh(db_obj)
         return db_obj
 
-    async def update(
-        self, db: AsyncSession, *, db_obj: ModelType, obj_in: Union[UpdateSchemaType, Dict[str, Any]]
-    ) -> ModelType:
+    async def update(self, db: AsyncSession, *, db_obj: ModelType, obj_in: Union[UpdateSchemaType, Dict[str, Any]]) -> ModelType:
+        """ 更新数据库对象"""
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
@@ -117,6 +120,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return db_obj
 
     async def remove(self, db: AsyncSession, *, id: int) -> Optional[ModelType]:
+        """ 删除数据库对象"""
         result = await db.execute(select(self.model).filter(self.model.id == id))
         obj = result.scalars().first()
         if obj:

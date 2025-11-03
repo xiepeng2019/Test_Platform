@@ -26,13 +26,18 @@ from utils import (
 app = FastAPI()
 
 def signal_handler(signum, frame):
+    """
+    信号处理函数, 用于捕获SIGINT和SIGTERM信号, 进行优雅关闭服务
+    :param signum: 信号编号
+    :param frame: 当前栈帧
+    """
     logger.info("🛑 接收到关闭信号，正在优雅关闭服务...")
     sys.exit(0)
 
 
-signal.signal(signal.SIGINT, signal_handler)
-signal.signal(signal.SIGTERM, signal_handler)
-logger.info(f"SERVER_IP: {SERVER_IP}")
+signal.signal(signal.SIGINT, signal_handler) # 注册SIGINT信号处理函数
+signal.signal(signal.SIGTERM, signal_handler) # 注册SIGTERM信号处理函数
+logger.info(f"SERVER_IP: {SERVER_IP}") 
 logger.info(f"LOG_HOST_DIR: {LOG_HOST_DIR}")
 
 
@@ -101,6 +106,7 @@ async def get_tasks():
 
 @app.get("/tasks/{job_id}/logs", tags=['task'])
 async def get_task_logs(job_id: str):
+    """获取任务日志（流式响应）"""
     try:
         container_handler = DockerContainerHandler(job_id)
         return await container_handler.logs
@@ -112,7 +118,7 @@ async def get_task_logs(job_id: str):
 
 @app.delete("/tasks/{job_id}", tags=['task'])
 async def delete_task(job_id: str):
-    # 删除容器
+    """删除任务"""
     try:
         container_handler = DockerContainerHandler(job_id)
         await container_handler.delete()

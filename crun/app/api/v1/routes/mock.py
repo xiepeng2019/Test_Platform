@@ -210,7 +210,7 @@ async def get_card_list() -> Any:
 
 @router.get("/api/workplace/overview-content")
 async def get_overview_content() -> Any:
-    year = datetime.now().year
+    year = datetime.now().year # 获取当前年份
     line_data = [
         {
             "date": f"{year}-{i + 1}",
@@ -249,6 +249,7 @@ list_video = get_list()
 
 @router.get("/api/workplace/popular-contents")
 async def get_popular_contents(request: Request) -> Any:
+    """获取热门内容"""
     query_params = request.query_params
     page = int(query_params.get("page", 1))
     pageSize = int(query_params.get("pageSize", 5))

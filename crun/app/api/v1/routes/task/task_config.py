@@ -34,7 +34,6 @@ async def list_task_configs(
     }
     task_configs_list = await crud.get_multi(db, skip=skip, limit=limit, **filters)
     total = await crud.count(db, **filters)
-    # Convert TaskConfig objects to TaskConfigListItem objects
     list_items = [TaskConfigListItem(**task_config.__dict__) for task_config in task_configs_list]
     return TaskConfigList(list=list_items, total=total)
 
@@ -57,9 +56,7 @@ async def read_data_options(
     db: AsyncSession = Depends(deps.get_db),
     project_id: int = Depends(deps.current_project_id)
 ):
-    f"""
-    Retrieve task config options.
-    """
+    """获取任务配置选项"""
     return await crud.get_options(db, project_id=project_id)
 
 

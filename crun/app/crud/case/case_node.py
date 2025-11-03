@@ -16,6 +16,8 @@ from app.schemas import TestCaseNodeTreeItem, TestCaseNodeTreeItemOfTask
 
 # 用于将协议类（Protocol） 标记为 “运行时可检查的”。它的核心作用是让协议类能够在运行时通过 isinstance()
 # 或 issubclass() 函数进行类型检查，这在常规的协议类中是不支持的
+
+# 定义一个协议类，用于约束 key 必须是可转换为整数的类型
 @runtime_checkable
 class IntConvertible(Protocol):
     def __str__(self) -> str: ...
@@ -32,12 +34,11 @@ class TreeBuilder:
     def __init__(self) -> None:
         self.model = TestCaseNode
 
-    async def build_tree_with_case_counts(
-        self,
-        db: AsyncSession,
-        project_id: int,
-        selected_case_indexes: Optional[Set[str]] = None
-    ) -> Any:
+    async def build_tree_with_case_counts(self, db: AsyncSession, project_id: int, 
+    selected_case_indexes: Optional[Set[str]] = None) -> Any:
+        """
+        构建测试用例节点树，包含用例总数和选中用例数统计
+        """
         # 获取所有节点
         nodes = await self._get_all_nodes(db, project_id)
 
@@ -60,13 +61,19 @@ class TreeBuilder:
             self._accumulate_counts(root, total_case_counts, selected_case_counts)
         return root_nodes
 
-    async def _get_all_nodes(self, db: AsyncSession, project_id: int):
+    async def _get_all_nodes(self, db: AsyncSession, project_id: int) -> List[TestCaseNode]:
+        """
+        获取所有测试用例节点
+        """
         result = await db.execute(
             select(self.model).where(self.model.project_id == project_id).order_by(self.model.id)
         )
         return result.scalars().all()
 
     async def _get_case_counts(self, db: AsyncSession) -> Dict[int | None, int]:
+        """
+        获取每个节点下的用例总数
+        """
         result = await db.execute(
             select(TestCase.node_id, func.count(TestCase.index)).group_by(TestCase.node_id)
         )
@@ -75,6 +82,9 @@ class TreeBuilder:
     async def _get_selected_case_counts(
         self, db: AsyncSession, selected_case_indexes: Set[str]
     ) -> Dict[int, int]:
+        """
+        获取选中的用例数统计
+        """
         result = await db.execute(
             select(TestCase.node_id, func.count(TestCase.index))
             .where(TestCase.index.in_(selected_case_indexes))
@@ -83,6 +93,9 @@ class TreeBuilder:
         return {row[0]: row[1] for row in result.all()}
 
     def _build_node_map(self, nodes) -> Dict[int, Dict[str, Any]]:
+        """
+        构建节点映射，将节点ID映射到包含节点信息的字典
+        """
         return {
             node.id: {
                 "key": str(node.id),
@@ -94,6 +107,9 @@ class TreeBuilder:
     def _build_tree_structure(
         self, nodes, node_map: Dict[int, Dict[str, Any]]
     ) -> List[CaseNode]:
+        """
+        构建测试用例节点树结构
+        """
         root_nodes = []
         for node in nodes:
             current = node_map[node.id]
@@ -109,6 +125,9 @@ class TreeBuilder:
         case_counts: Dict[int | None, int],
         selected_counts: Dict[int, int]
     ) -> Tuple[int, int]:
+        """
+        递归累加节点下的用例总数和选中用例数
+        """
         node_id = int(node["key"])
         total = case_counts.get(node_id, 0)
         selected = selected_counts.get(node_id, 0)
@@ -123,6 +142,9 @@ class TreeBuilder:
 
 
 class CRUDTestCaseNode(CRUDBase[TestCaseNode, TestCaseCreate, TestCaseUpdate]):
+    """
+    TestCaseNode CRUD # 测试用例节点CRUD操作
+    """
     def __init__(self, model: Type[TestCaseNode]):
         super().__init__(model)
         self.tree_builder = TreeBuilder()
@@ -196,18 +218,19 @@ class CRUDTestCaseNode(CRUDBase[TestCaseNode, TestCaseCreate, TestCaseUpdate]):
         )
         return tree_data
 
-    async def get_or_create_node_by_path(
-        self,
-        db: AsyncSession,
-        project_id: int,
-        path: str,
-        creater: str = 'System'
+    async def get_or_create_node_by_path(self, db: AsyncSession, project_id: int, path: str, creater: str = 'System'
     ) -> int | None:
-        parts = [part for part in path.strip("/").split("/") if part]
-        parent_id = 0
-        node = None
+        """
+        根据路径获取或创建测试用例节点
+        """
+        parts = [part for part in path.strip("/").split("/") if part] # 路径 parts 列表
+        parent_id = 0 # 父节点ID，初始为0表示根节点
+        node = None # 当前节点
 
         for name in parts:
+            """
+            遍历路径 parts 列表, 根据父节点ID和节点名称查询或创建节点
+            """
             stmt = select(self.model).where(
                 self.model.project_id == project_id,
                 self.model.parent_id == parent_id,
@@ -215,7 +238,10 @@ class CRUDTestCaseNode(CRUDBase[TestCaseNode, TestCaseCreate, TestCaseUpdate]):
             )
             result = await db.execute(stmt)
             node = result.scalar_one_or_none()
-
+            """
+            如果查询到节点, 则将当前节点ID更新为查询到的节点ID
+            如果未查询到节点, 则创建新节点, 并将当前节点ID更新为新节点ID
+            """
             if not node:
                 node = TestCaseNode(**{
                     "name": name,

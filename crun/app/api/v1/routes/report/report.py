@@ -14,14 +14,14 @@ from app.crud.report.reports import report as crud
 report_router = APIRouter(prefix="/api/reports")
 
 # 返回模型response_model=BugList
-@report_router.get("", response_model=TestReportList)
+@report_router.get("", response_model=TestReportList, operation_id='queryTestReport')
 async def query_test_report(
     # Depends 依赖
     db: AsyncSession = Depends(deps.get_db),
     project_id: int = Depends(deps.current_project_id),
     page: int = 1,
     pageSize: int = 50,
-    query: TestReportQueryParams = Depends()
+    query: TestReportQueryParams = Depends() # 查询参数依赖
 ) -> Any:
     """查询测试报告"""
     skip = (page - 1) * pageSize

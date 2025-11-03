@@ -21,7 +21,7 @@ async def download_log(
     db: AsyncSession = Depends(deps.get_db),
     record_id: int = Path(..., description="The ID of the task record to get"),
 ):
-    """ Get task  record logs"""
+    """下载任务记录日志"""
     task_record = await crud.get(db=db, id=record_id)
     if not task_record:
         raise HTTPException(status_code=404, detail="Task record not found")
@@ -42,6 +42,6 @@ async def container_stop_data(
     data: ContainerStopData,
     service: TaskRecordService = Depends(get_task_record_service),
 ) -> Any:
-    """ Run record data by ID. """
+    """停止任务容器"""
     logger.info(f"container_stop_data, data={data}")
     await service.container_stop(db=db, job_id=job_id, data_in=data)

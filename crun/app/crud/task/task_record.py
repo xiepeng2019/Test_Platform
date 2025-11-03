@@ -9,7 +9,13 @@ from app.schemas import TaskRecordCreate, TaskRecordUpdate
 
 
 class CRUDTaskRecord(CRUDBase[TestTaskRecord, TaskRecordCreate, TaskRecordUpdate]):
+    """
+    TestTaskRecord CRUD
+    """
     async def get_last_record(self, db: AsyncSession, *, task_id: int) -> TestTaskRecord | None:
+        """
+        获取任务的最新记录
+        """
         result = await db.execute(
             select(self.model).where(
                 self.model.task_id == task_id
@@ -17,18 +23,20 @@ class CRUDTaskRecord(CRUDBase[TestTaskRecord, TaskRecordCreate, TaskRecordUpdate
         )
         return result.scalars().first()
 
-    async def get_multi(
-        self, db: AsyncSession, *, skip: int = 0, limit: int = 100, **kwargs
-    ) -> List[TestTaskRecord]:
+    async def get_multi(self, db: AsyncSession, *, skip: int = 0, limit: int = 100, **kwargs) -> List[TestTaskRecord]:
+        """
+        获取任务记录列表
+        """
         query = select(self.model)
         query = self._extra_filters(query, kwargs)
         query = self._apply_filters(query, kwargs)
         result = await db.execute(query.offset(skip).limit(limit))
         return list(result.scalars().all())
 
-    async def get_task_by_id(
-        self, db: AsyncSession, *, job_id: int
-    ) -> TestTask | None:
+    async def get_task_by_id(self, db: AsyncSession, *, job_id: int) -> TestTask | None:
+        """
+        根据任务记录ID获取任务
+        """
         result = await self.get(db=db, id=job_id)
         if not result:
             return None

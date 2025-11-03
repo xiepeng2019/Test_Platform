@@ -17,7 +17,10 @@ class AgentClient:
         self.ws_url = f'ws://{base_url}:9001'
 
     async def heartbeat(self) -> dict:
-        # 心跳检测（验证Agent是否在线）
+        """
+        心跳检测(验证Agent是否在线)
+        :return: 包含心跳信息的字典
+        """
         try:
             async with aiohttp.ClientSession() as s:
                 async with s.get(f'{self.http_url}/heartbeat', timeout=aiohttp.ClientTimeout(total=1, sock_connect=1)) as resp:
@@ -39,7 +42,12 @@ class AgentClient:
             raise HTTPException(status_code=500, detail="Agent is not running")
 
     async def start_ws_to_agent(self, task_id: str, queue: asyncio.Queue):
-        # 建立 WebSocket 连接获取实时日志
+        """
+        建立 WebSocket 连接获取实时日志
+        :param task_id: 任务ID
+        :param queue: 用于存储日志消息的队列
+        :return: None
+        """
         uri = f"{self.ws_url}/ws/logs/{task_id}"
         async with websockets.connect(uri) as ws:
             try:
@@ -55,6 +63,17 @@ class AgentClient:
                        branch: str,
                        env_vars: List[dict] | None = None,
                        server: dict | None = None) -> dict:
+        """
+        触发任务执行
+        :param job_id: 任务ID
+        :param repo: 仓库URL
+        :param cases_index: 测试用例索引列表
+        :param image: 执行环境镜像
+        :param branch: 分支名称
+        :param env_vars: 环境变量列表
+        :param server: 服务器配置
+        :return: 包含任务执行信息的字典
+        """
         async with aiohttp.ClientSession() as s:
             payload = {
                 'job_id': job_id,
@@ -76,7 +95,12 @@ class AgentClient:
                 return response
 
     async def download_log(self, task_name: str, job_id: int) -> StreamingResponse:
-        # 下载任务完整日志
+        """
+        下载任务完整日志
+        :param task_name: 任务名称
+        :param job_id: 任务ID
+        :return: 包含任务日志的 StreamingResponse
+        """
         url = f"{self.http_url}/tasks/{job_id}/log"
 
         session_timeout = aiohttp.ClientTimeout(total=60)
@@ -90,6 +114,10 @@ class AgentClient:
 
         # ✔ 直接返回 aiohttp 的原始 stream，包装成 StreamingResponse
         async def stream():
+            """
+            流式返回任务日志
+            :return: 任务日志的流式响应
+            """
             try:
                 async for chunk in resp.content.iter_any(): # 逐块读取日志内容
                     yield chunk # 流式返回给前端

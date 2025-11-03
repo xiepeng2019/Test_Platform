@@ -22,6 +22,16 @@ if not GITLAB_ACCESS_TOKEN:
 
 
 class TaskRunRequest(BaseModel):
+    """
+    请求体参数
+    job_id: 任务ID
+    repo: 代码仓库地址
+    cases_index: 测试用例索引列表
+    image: 容器镜像
+    branch: 分支名
+    env_vars: 环境变量列表
+    server: 服务器配置
+    """
     job_id: int
     repo: str = 'https://code.byted.org/hred/board_and_test_test.git'
     cases_index: List[str] = []

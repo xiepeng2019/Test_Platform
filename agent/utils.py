@@ -59,16 +59,18 @@ def get_plugin_path():
 
 
 class Local:
+    """本地主机信息类"""
     ip = None
 
     @staticmethod
     def get_local_ip():
+        """获取本地主机IP地址"""
         if Local.ip:
             return Local.ip
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # 创建UDP套接字
         try:
-            s.connect(('10.255.255.255', 1))
-            Local.ip = s.getsockname()[0]
+            s.connect(('10.255.255.255', 1))  # 连接到广播地址，端口1（UDP协议）
+            Local.ip = s.getsockname()[0]  # 获取本地套接字绑定的IP地址（即主机IP）
         except Exception:
             Local.ip = '127.0.0.1'
         finally:
@@ -77,6 +79,7 @@ class Local:
 
 
 class DockerContainerHandler:
+    """Docker 容器操作处理类"""
     def __init__(self, job_id: str):
         self.job_id = job_id  # 任务ID
         self.container_name = f"task-{job_id}"  # 容器名（与任务ID绑定）
@@ -84,7 +87,7 @@ class DockerContainerHandler:
         self.log_dir.mkdir(parents=True, exist_ok=True, mode=0o777)  # 创建目录（权限777）
         self.plugin_path = Path(__file__).parent / 'test_runner_plugin'  # 测试插件路径
         self.pip_cache_path = Path(__file__).parent / '.cache' / 'pip'  # pip缓存路径（加速依赖安装）
-        self.pip_cache_path.mkdir(parents=True, exist_ok=True, mode=0o777)
+        self.pip_cache_path.mkdir(parents=True, exist_ok=True, mode=0o777)  # 创建目录（权限777）
         self.pytest_log_path = "/logs/pytest.log"  # 容器内测试日志路径
 
     async def stop(self):
@@ -105,7 +108,7 @@ class DockerContainerHandler:
 
     @property
     async def logs(self):
-        """获取容器日志（Docker原生日志）"""
+        """获取容器日志(返回Docker原生日志)"""
         return self.container.logs()
 
     @property
@@ -145,7 +148,7 @@ class DockerContainerHandler:
 
     @property
     def git_repo(self):
-        """处理Git仓库地址（添加GitLab令牌，避免权限问题）"""
+        """处理Git仓库地址(添加GitLab令牌, 避免权限问题)"""
         task_info = TASK_SETTINGS_MAP[self.job_id]
         if task_info['repo'].startswith("https://"):
             repo_url = task_info['repo'].replace(
@@ -309,7 +312,7 @@ async def clean_expired_containers():
 
             # 检查是否满足清理条件
             if create_time < one_day_ago and container.status == "exited":
-                logger.info(f"清理过期容器：{container.name}（ID: {container.id[:12]}）")
+                logger.info(f"清理过期容器：{container.name} (ID: {container.id[:12]})")
                 try:
                     # 停止并删除容器
                     await asyncio.to_thread(container.stop)
@@ -348,7 +351,7 @@ async def sync_task_and_container_status():
             # 任务存在但容器已消失的情况
             if not container:
                 if task_info["status"] not in ["succeeded", "failed", "stopped"]:
-                    logger.warning(f"任务 {job_id} 的容器已消失，更新状态为failed")
+                    logger.warning(f"任务 {job_id} 的容器已消失, 更新状态为failed")
                     task_info["status"] = "failed"
                     await trigger_container_stop_hooks(job_id, task_info)
                 continue
@@ -363,7 +366,7 @@ async def sync_task_and_container_status():
                     await trigger_container_stop_hooks(job_id, task_info)
             elif container.status == "running":
                 if task_info["status"] != "running":
-                    logger.info(f"容器 {container_name} 正在运行，更新任务状态为running")
+                    logger.info(f"容器 {container_name} 正在运行, 更新任务状态为running")
                     task_info["status"] = "running"
             elif container.status in ["paused", "restarting"]:
                 if task_info["status"] != container.status:
@@ -376,7 +379,7 @@ async def sync_task_and_container_status():
 
 
 async def periodic_task():
-    """定时任务主函数，每60秒执行一次"""
+    """定时任务主函数, 每60秒执行一次"""
     while True:
         try:
             # 执行容器清理
@@ -394,7 +397,7 @@ def start_periodic_tasks():
     """启动定时任务"""
     loop = asyncio.get_event_loop()
     loop.create_task(periodic_task())
-    logger.info("定时任务已启动，将每60秒执行一次")
+    logger.info("定时任务已启动, 将每60秒执行一次")
 
 
 # 注册默认hook

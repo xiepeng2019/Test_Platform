@@ -9,31 +9,26 @@ from app.schemas import CaseResultCreate, CaseRecordUpdate
 
 
 class CRUDCaseRecord(CRUDBase[TestCaseRecord, CaseResultCreate, CaseRecordUpdate]):
-    async def get_by_task_id(
-        self, db: AsyncSession, *, task_id: int
-    ) -> List[TestCaseRecord]:
+    async def get_by_task_id(self, db: AsyncSession, *, task_id: int32) -> List[TestCaseRecord]:
+        """根据任务ID获取测试用例记录"""
         result = await db.execute(
             select(self.model).where(self.model.task_record_id == task_id)
         )
         return list(result.scalars().all())
 
-    async def get_by_task_id_and_case_index(
-        self, db: AsyncSession, *, task_id: int, case_index: str
+    async def get_by_task_id_and_case_index(self, db: AsyncSession, *, task_id: int32, case_index: str
     ) -> TestCaseRecord | None:
+        """根据任务ID和用例索引获取测试用例记录"""
         result = await db.execute(
             select(self.model).where(
                 self.model.task_record_id == task_id,
                 self.model.case_index == case_index
             )
         )
-        return result.scalars().first()
+        return result.scalars().first() # 返回第一个匹配的记录
 
-    async def update_case_record(
-        self,
-        db: AsyncSession,
-        record_id: str,
-        data_in: CaseResultCreate,
-    ) -> TestCaseRecord:
+    async def update_case_record(self, db: AsyncSession, record_id: str, data_in: CaseResultCreate,) -> TestCaseRecord:
+        """更新测试用例记录"""
         tr = await db.get(TestTaskRecord, record_id)
         if not tr:
             raise HTTPException(status_code=404, detail="Task record not found")

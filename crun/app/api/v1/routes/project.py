@@ -18,6 +18,7 @@ from app.schemas import (
 
 router = APIRouter(prefix="/api/projects")
 source = 'Project'
+"""FastAPI用户认证"""
 fastapi_users = FastAPIUsers[User, int](
     deps.get_user_manager,
     [deps.auth_backend],

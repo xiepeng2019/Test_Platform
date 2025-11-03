@@ -25,7 +25,7 @@ from app.crud import (
 
 
 class TaskRecordService():
-    """ TestTask Record Service"""
+    """任务记录服务"""
 
     def __init__(self):
         ...
@@ -35,6 +35,7 @@ class TaskRecordService():
         db: AsyncSession,
         task_id: int,
     ) -> TestTaskRecordModel:
+        """获取任务记录"""
         task_record = await crud_task_record.get_last_record(db=db, task_id=task_id)
         if not task_record:
             raise HTTPException(status_code=404, detail="Task record not found")
@@ -45,6 +46,7 @@ class TaskRecordService():
         db: AsyncSession,
         task_id: int,
     ) -> Tuple[List[TaskRecord], int]:
+        """获取任务记录列表"""
         datas = await crud_task_record.get_multi(db=db, task_id=task_id, limit=999)
         if not datas:
             raise HTTPException(status_code=404, detail="Task record not found")
@@ -73,6 +75,7 @@ class TaskRecordService():
         db: AsyncSession,
         data_in: CaseResultCreate,
     ) -> CaseRecord:
+        """更新测试用例执行记录"""
         logger.info(f'update_task_record, record_id={data_in.record_id}, data_in={data_in}')
         case_record = await crud_case_record.update_case_record(db=db, record_id=data_in.record_id, data_in=data_in)
         return CaseRecord.model_validate(case_record, from_attributes=True)
@@ -84,6 +87,7 @@ class TaskRecordService():
         job_id: int,
         data_in: ContainerStopData,
     ) -> None:
+        """停止任务容器"""
         logger.info(f'container_stop, data_in={data_in}')
         task = await crud_task_record.get_task_by_id(db=db, job_id=job_id)
         if not task:
@@ -129,4 +133,5 @@ class TaskRecordService():
 
 
 def get_task_record_service() -> TaskRecordService:
+    """获取任务记录服务"""
     return TaskRecordService()

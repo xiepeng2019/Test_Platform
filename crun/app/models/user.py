@@ -3,7 +3,7 @@ from typing import Any
 
 from fastapi_users.db import SQLAlchemyBaseUserTable
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Integer, String, JSON, DateTime, select
+from sqlalchemy import Integer, String, JSON, DateTime
 from sqlalchemy.sql import func
 
 from app.core.orm import Base
@@ -11,7 +11,7 @@ from app.core.orm import Base
 
 
 class User(SQLAlchemyBaseUserTable[int], Base):
-    """Represents a user in the system."""
+    """用户模型"""
     __tablename__ = "user"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, doc="用户ID")

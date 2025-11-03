@@ -27,9 +27,7 @@ async def read_datas(
     parent_id: Optional[int] = None,
     name: Optional[str] = None
 ) -> Any:
-    f"""
-    Retrieve {source}.
-    """
+    """获取用例节点列表"""
     query_params = {
         "parent_id": parent_id,
         "project_id": project_id,
@@ -50,9 +48,7 @@ async def create(
     data_in: TestCaseNodeCreate,
     project_id: int = Depends(deps.current_project_id),
 ) -> Any:
-    f"""
-    Create new {source}.
-    """
+    """创建用例节点"""
     project = await crud_project.get(db=db, id=project_id)
     if not project:
         raise HTTPException(status_code=404, detail=f"Project not found")
@@ -66,9 +62,7 @@ async def read_tree(
     db: AsyncSession = Depends(deps.get_db),
     project_id: int = Depends(deps.current_project_id),
 ) -> Any:
-    f"""
-    Retrieve {source} tree.
-    """
+    """获取用例节点树"""
     tree = await crud.get_tree(db=db, project_id=project_id)
     return tree
 
@@ -79,9 +73,7 @@ async def read_tree_cases(
     db: AsyncSession = Depends(deps.get_db),
     project_id: int = Depends(deps.current_project_id),
 ) -> Any:
-    f"""
-    Retrieve {source} tree.
-    """
+    """获取用例节点树中的用例"""
     async def get_cases(nodes):
         for node in nodes:
             if not node['children']:
@@ -111,9 +103,7 @@ async def update(
     id: int,
     data_in: TestCaseNodeUpdate,
 ) -> Any:
-    f"""
-    Update an {source}.
-    """
+    """更新用例节点"""
     data = await crud.get(db=db, id=id)
     if not data:
         raise HTTPException(status_code=404, detail=f"{source} not found")
@@ -128,9 +118,7 @@ async def read(
     db: AsyncSession = Depends(deps.get_db),
     id: int,
 ) -> Any:
-    f"""
-    Get {source} by ID.
-    """
+    """获取用例节点"""
     data = await crud.get(db=db, id=id)
     if not data:
         raise HTTPException(status_code=404, detail=f"{source} not found")
@@ -143,9 +131,7 @@ async def delete(
     db: AsyncSession = Depends(deps.get_db),
     id: int,
 ) -> Any:
-    f"""
-    Delete an {source}.
-    """
+    """删除用例节点"""
     data = await crud.get(db=db, id=id)
     if not data:
         raise HTTPException(status_code=404, detail=f"{source} not found")

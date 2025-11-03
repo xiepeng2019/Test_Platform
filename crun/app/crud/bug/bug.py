@@ -8,7 +8,9 @@ from app.schemas.bug.bug import (BugCreate, BugUpdate)
 class CRUDBug(CRUDBase[Bug, BugCreate, BugUpdate]):
 
     async def create_bug(self, db: AsyncSession, obj_in: BugCreate, project_id: int) -> Bug:
-        """Create new data """
+        """创建Bug"""
+        # 内层解包：将 obj_in.model_dump(exclude={"test_case_id"}) 解包为键值对
+        # 外层解包：将所有键值对解包为 Bug 模型的参数
         bug_obj = Bug(**{
             **obj_in.model_dump(exclude={"test_case_id"}),
             'project_id': project_id

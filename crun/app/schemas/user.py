@@ -11,6 +11,7 @@ settings = get_settings()
 
 
 class UserRead(schemas.BaseUser[uuid.UUID]):
+    """用户读取模型"""
     id: int
     name: str
     en_name: str | None = None
@@ -21,12 +22,14 @@ class UserRead(schemas.BaseUser[uuid.UUID]):
 
     @field_validator("avatar", mode="before")
     def transform_avatar_url(cls, v: str | None) -> str | None:
+        """转换头像URL为完整URL"""
         if v and not v.startswith("http"):
             return f"{settings.STATIC_URL}{v}"
         return v
 
 
 class UserCreate(schemas.BaseUserCreate):
+    """用户创建模型"""
     name: str
     en_name: str | None = None
     avatar: str | None = None
@@ -34,11 +37,13 @@ class UserCreate(schemas.BaseUserCreate):
 
 
 class UserUpdate(schemas.BaseUserUpdate):
+    """用户更新模型"""
     name: str | None = None
     en_name: str | None = None
 
 
 class UserInfo(schemas.BaseUser[uuid.UUID]):
+    """用户信息模型"""
     id: int
     name: str
     en_name: str | None = None
@@ -46,6 +51,7 @@ class UserInfo(schemas.BaseUser[uuid.UUID]):
 
 
 class UserSearch(BaseModel):
+    """用户搜索模型"""
     id: int
     email: str
     name: str
@@ -55,6 +61,7 @@ class UserSearch(BaseModel):
 
     @field_validator("avatar", mode="before")
     def transform_avatar_url(cls, v: str | None) -> str | None:
+        """转换头像URL为完整URL"""
         if v and not v.startswith("http"):
             return f"{settings.STATIC_URL}{v}"
         return v
@@ -63,4 +70,5 @@ class UserSearch(BaseModel):
 
 
 class UpdateUserAvatar(BaseModel):
+    """更新用户头像模型"""
     avatar: str

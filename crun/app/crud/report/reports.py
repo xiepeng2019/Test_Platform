@@ -7,13 +7,12 @@ from app.schemas.reports.report import (TestReportsBase, TestReportCreate, TestR
 class CRUDRepoet(CRUDBase[TestReport, TestReportCreate, TestReportUpdate]):
 
     async def create_report(self, db: AsyncSession, obj_in: TestReportCreate, project_id: int) -> TestReportsBase:
-        """Create new data """
+        """ 创建测试报告"""
         report_obj = TestReportCreate(**{
             'project_id': project_id
         })
         db.add(report_obj)
         await db.flush()
-
         # if obj_in.test_case_id:
         #     case_links = [
         #         TestReportCreate(**{
